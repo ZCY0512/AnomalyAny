@@ -154,11 +154,56 @@ CMD ["/usr/sbin/sshd", "-D", "-f", "/opt/ssh/sshd_config", "-E", "/tmp/sshd.log"
 ```
 </details>
 
-##  🟡 Examples
-Please refer to the jupyter notebooks for example results.
-![example.png](imgs/example.png)
+## 🖼️ Anomaly Inference
+
+We provide Jupyter notebooks for a complete pipeline to generate anomaly images.
+
+To generate an anomaly image, you need to provide **prompts** and a **normal guidance image** as input:
+
+```python
+# Example setup
+type = "table"  # Define the object name
+prompt = f"a photo of a {type} that is faded"  # Anomaly prompt guidance
+tokens = "8"  # Token indice of the anomaly keyword
+
+normal_prompt = f"a photo of a {type}" 
+detailed_prompt = f"a photo of a {type} with areas of discoloration or lightening due to prolonged sun exposure"
+image_guidance_path = "./example_web/table.jpg"  # Path to normal guidance image
+
+token_indices = get_indices_to_alter_new(stable, prompt, tokens)  # Extract token index from anomaly description
+image_guidance = Image.open(image_guidance_path).convert("RGB")
+````
+
+We implement the `run_and_display` pipeline to generate the anomaly image. It returns the generated anomaly image and its latent representation, with the guidance and several tunable hyperparameters as its input:
+
+```python
+image, image_latent = run_and_display(
+    controller=controller,
+    generator=g, 
+    run_standard_sd=False,
+    display_output=True,
+    prompts=[prompt],                   # Anomaly prompt guidance
+    indices_to_alter=token_indices,     # Token indices of anomaly prompt
+    init_image=image_guidance,          # Normal image guidance 
+    init_image_guidance_scale=0.25,     # Gamma that controls the starting step
+    mask_image=None,                    # Optional mask to localize anomaly region
+    scale_factor=50,                    # Controls latent update rate
+    normal_prompt=normal_prompt,        # Normal prompt
+    detailed_prompt=detailed_prompt     # Detailed anomaly description
+)
+```
+
+Refer to the provided Jupyter notebooks for complete examples and results:
+
+* `clip_anomaly_generation_mvtec.ipynb`
+* `clip_anomaly_generation_web.ipynb`
+
+![Example Output](imgs/example.png)
 
 
+## 🛠️ Todo List
+- [ ] Colab demo.
+- [ ] HuggingFace demo.
 
 
 ## 💌 Acknowledgement
