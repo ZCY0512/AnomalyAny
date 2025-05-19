@@ -1,6 +1,6 @@
 <div align="center">
 
-<h1>Anomaly Anything: Promptable Unseen Visual Anomaly Generation</h1>
+<h1>[CVPR 2025] Anomaly Anything: Promptable Unseen Visual Anomaly Generation</h1>
 
 <div>
     <a href='https://hansunhayden.github.io/' target='_blank'>Han Sun</a><sup>1</sup>&emsp;
@@ -13,11 +13,15 @@
 </div>
 
 
-<div>
-    <h4 align="center">
-        • <a href="https://arxiv.org/pdf/2406.01078" target='_blank'>CVPR 2025</a> •
-    </h4>
-</div>
+[//]: # (<div>)
+
+[//]: # (    <h4 align="center">)
+
+[//]: # (        • <a href="https://arxiv.org/pdf/2406.01078" target='_blank'>CVPR 2025</a> •)
+
+[//]: # (    </h4>)
+
+[//]: # (</div>)
 
 [[Project page]](https://hansunhayden.github.io/CUT.github.io/) [[Paper]](https://arxiv.org/pdf/2406.01078)[[Huggingface Demo (coming soon)]](https://arxiv.org/pdf/2406.01078)
 
