@@ -53,6 +53,8 @@ conda env create -f env.yml
 You can also build the environment with docker.
 <details>
 <summary>Docker file</summary>
+
+```
 # Getting base ubuntu image with platform specified (important if you build on Apple Silicon)
 # FROM --platform=linux/amd64 ubuntu:latest
 
@@ -149,6 +151,7 @@ SHELL ["/bin/bash", "--login", "-c"]
 
 
 CMD ["/usr/sbin/sshd", "-D", "-f", "/opt/ssh/sshd_config", "-E", "/tmp/sshd.log"]
+```
 </details>
 
 ##  🟡 Examples
