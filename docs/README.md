@@ -23,7 +23,7 @@
 
 [//]: # (</div>)
 
-[[Project page]](https://hansunhayden.github.io/CUT.github.io/) [[Paper]](https://arxiv.org/pdf/2406.01078)[[Huggingface Demo (coming soon)]](https://arxiv.org/pdf/2406.01078)
+[[Project page]](https://hansunhayden.github.io/AnomalyAny.github.io/) [[Paper]](https://arxiv.org/pdf/2406.01078)[[Huggingface Demo (coming soon)]](https://arxiv.org/pdf/2406.01078)
 
 
 ![generation_more.png](imgs/generation_more.png)
