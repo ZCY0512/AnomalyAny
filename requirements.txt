@@ -1,0 +1,9 @@
+accelerate==0.33.0
+invisible_watermark
+openmim
+git+https://github.com/facebookresearch/segment-anything.git
+transformers==4.29.2
+safetensors
+pycocotools==2.0.6
+seaborn
+git+https://github.com/openai/CLIP.git
