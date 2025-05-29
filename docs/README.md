@@ -222,14 +222,11 @@ Big thanks to these amazing open-source works!
 If you find our work useful in your research please consider citing our paper:
 
 ```
-@misc{sun2025anomalyanythingpromptableunseen,
+@article{sun2025anomalyany,
       title={Anomaly Anything: Promptable Unseen Visual Anomaly Generation}, 
       author={Han Sun and Yunkang Cao and Hao Dong and Olga Fink},
-      year={2025},
-      eprint={2406.01078},
-      archivePrefix={arXiv},
-      primaryClass={cs.CV},
-      url={https://arxiv.org/abs/2406.01078}, 
+      year={2024},
+      journal={arXiv preprint arXiv:2406.01078},
 }
 
 ```
