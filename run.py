@@ -150,13 +150,13 @@ def run_on_prompt_and_masked_image(prompt: List[str],
                                    mask_image: str,
                                    seed: torch.Generator,
                                    config: RunConfig,
-
+                                   
                                    normal_prompt,
                                    detailed_prompt,
 
-                                   img_prompt=None,
-                                   abnormal_img=None,
-                                   clip_loss=None) -> Image.Image:
+                                   img_prompt = None,
+                                   abnormal_img = None,
+                                   clip_loss = None) -> Image.Image:
     if controller is not None:
         ptp_utils.register_attention_control(model, controller)
     outputs, image_latents = model(prompt=prompt,

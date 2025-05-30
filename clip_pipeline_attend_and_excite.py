@@ -344,6 +344,7 @@ class RelationalAttendAndExcitePipeline(StableDiffusionPipeline):
         if return_losses:
             return loss, losses
         else:
+            del losses
             return loss
 
     @staticmethod
@@ -354,6 +355,10 @@ class RelationalAttendAndExcitePipeline(StableDiffusionPipeline):
         latents = latents - step_size * grad_cond
         if return_grad:
             return latents, grad_cond
+        del grad_cond
+        del loss
+        # gc.collect()
+        # torch.cuda.empty_cache()
         return latents
 
     def _perform_iterative_refinement_step(self,
@@ -694,6 +699,7 @@ class RelationalAttendAndExcitePipeline(StableDiffusionPipeline):
         )
         #
         # print(normal_prompt, prompt, prompt_original)
+        model.zero_grad()
 
         # 4. Prepare timesteps
         self.scheduler.set_timesteps(num_inference_steps, device=device)
@@ -747,6 +753,7 @@ class RelationalAttendAndExcitePipeline(StableDiffusionPipeline):
                                             indices_to_alter=indices_to_alter,
                                             normal_embeds=normal_embeds)
 
+
         for k in range(k_range):
             #Generate random normal noise
             noise = torch.randn(latents.shape, generator=generator, device='cuda')
@@ -782,6 +789,7 @@ class RelationalAttendAndExcitePipeline(StableDiffusionPipeline):
                             encoder_hidden_states=prompt_embeds,
                             cross_attention_kwargs=cross_attention_kwargs,
                         ).sample
+                        self.unet.zero_grad()
 
                         # perform guidance
                         if do_classifier_free_guidance:
@@ -847,34 +855,31 @@ class RelationalAttendAndExcitePipeline(StableDiffusionPipeline):
                                     latents = self._update_latent(latents=latents, loss=loss_img, step_size=curr_step_size*2)
                                 # L_prompt
                                 loss_prompt = loss_img + (1.0-criterion_cosine(prompt_embeds, prompt_embeds_original).mean())
-                                # loss_prompt = loss_img
                                 # update embedding
                                 prompt_embeds = self._update_latent(latents=prompt_embeds, loss=loss_prompt, step_size=curr_step_size)
 
-                                del loss_img
-                            # del loss_att
+                                del loss_img, loss_prompt
+
                             del max_attention_per_index
                             del maps_curr, maps_
-                            # del noise_pred_uncond, noise_pred_text, noise_pred, latent_model_input
-                            gc.collect()
-                    del noise_pred_uncond, noise_pred_text, noise_pred, latent_model_input
-                    gc.collect()
 
+                    del noise_pred_uncond, noise_pred_text, noise_pred, latent_model_input
+
+                    
+                    
+                    
                     # additional attention optimization with L_att at early stage
                     with torch.enable_grad():
-                        latents = latents.clone().detach().requires_grad_(True)
-                        # Forward pass of denoising with text conditioning
-                        noise_pred_text = self.unet(latents, t,
-                                                    encoder_hidden_states=prompt_embeds[1].unsqueeze(0),
-                                                    cross_attention_kwargs=cross_attention_kwargs).sample
-                        self.unet.zero_grad()
+
                         if i < 10 and localization_update:
-                            # print("==============ATT")
-                            # If this is an iterative refinement step, verify we have reached the desired threshold for all
+                            latents = latents.clone().detach().requires_grad_(True)
+                            # Forward pass of denoising with text conditioning
+                            noise_pred_text = self.unet(latents, t,
+                                                        encoder_hidden_states=prompt_embeds[1].unsqueeze(0),
+                                                        cross_attention_kwargs=cross_attention_kwargs).sample
+                            self.unet.zero_grad()
                             e = 0
-                            if i in thresholds.keys() and loss_att > 1.0 - thresholds[i]:
-                            # if i in thresholds.keys() and e < 1:
-                            #     print("+++++++++++++++++++++ATT OPTIMIAZATION", scale_factor * np.sqrt(scale_range[i]))
+                            if i in thresholds.keys() and loss_att.item() > 1.0 - thresholds[i]:
                                 e += 1
                                 del noise_pred_text
                                 torch.cuda.empty_cache()
@@ -903,35 +908,41 @@ class RelationalAttendAndExcitePipeline(StableDiffusionPipeline):
                                     if loss_att != 0:
                                         latents = self._update_latent(latents=latents, loss=loss_att,
                                                                     step_size=scale_factor * np.sqrt(scale_range[i]))
+                                
+                                del loss_att, max_attention_per_index
+                                        
+                        
+                    # TODO perform again
+                    latents.detach()
+                    latent_model_input = torch.cat([latents] * 2) if do_classifier_free_guidance else latents
+                    latent_model_input = self.scheduler.scale_model_input(latent_model_input, t)
+                    noise_pred = self.unet(
+                        latent_model_input,
+                        t,
+                        encoder_hidden_states=prompt_embeds,
+                        cross_attention_kwargs=cross_attention_kwargs,
+                    ).sample
 
-                        # TODO perform again
-                        latent_model_input = torch.cat([latents] * 2) if do_classifier_free_guidance else latents
-                        latent_model_input = self.scheduler.scale_model_input(latent_model_input, t)
-                        noise_pred = self.unet(
-                            latent_model_input,
-                            t,
-                            encoder_hidden_states=prompt_embeds,
-                            cross_attention_kwargs=cross_attention_kwargs,
-                        ).sample
+                    if do_classifier_free_guidance:
+                        noise_pred_uncond, noise_pred_text = noise_pred.chunk(2)
+                        noise_pred = noise_pred_uncond + guidance_scale * (noise_pred_text - noise_pred_uncond)
+                    latents = self.scheduler.step(noise_pred, t, latents, **extra_step_kwargs).prev_sample
 
-                        if do_classifier_free_guidance:
-                            noise_pred_uncond, noise_pred_text = noise_pred.chunk(2)
-                            noise_pred = noise_pred_uncond + guidance_scale * (noise_pred_text - noise_pred_uncond)
-                        latents = self.scheduler.step(noise_pred, t, latents, **extra_step_kwargs).prev_sample
+                    # TODO masked noise blending
+                    noise_source_latents = self.scheduler.add_noise(latents_source, torch.randn_like(latents), t)
+                    if mask_image is not None:
+                        latents = latents * latent_mask + noise_source_latents * (1 - latent_mask)
 
-                        # TODO masked noise blending
-                        noise_source_latents = self.scheduler.add_noise(latents_source, torch.randn_like(latents), t)
-                        if mask_image is not None:
-                            latents = latents * latent_mask + noise_source_latents * (1 - latent_mask)
-                        # latents = latents * (1 - latent_mask) + noise_source_latents * latent_mask
+                    # call the callback, if provided
+                    if i == len(timesteps) - 1 or (
+                            (i + 1) > num_warmup_steps and (i + 1) % self.scheduler.order == 0):
+                        progress_bar.update()
+                        if callback is not None and i % callback_steps == 0:
+                            callback(i, t, latents)
 
-                        # call the callback, if provided
-                        if i == len(timesteps) - 1 or (
-                                (i + 1) > num_warmup_steps and (i + 1) % self.scheduler.order == 0):
-                            # print("**********************************call back")
-                            progress_bar.update()
-                            if callback is not None and i % callback_steps == 0:
-                                callback(i, t, latents)
+                    del noise_pred_uncond, noise_pred_text, noise_pred, latent_model_input, noise_source_latents
+                    gc.collect()
+                    torch.cuda.empty_cache()
 
             # 8. Post-processing
             # print(latents, latents.grad_fn)
@@ -942,17 +953,14 @@ class RelationalAttendAndExcitePipeline(StableDiffusionPipeline):
         # 9. Run safety checker
         image = self.decode_latents_new(latents)
         image, has_nsfw_concept = self.run_safety_checker(image, device, prompt_embeds.dtype)
-        # print(init_img_tensor.size(), abnormal_img_tensor.size(), image.size())
-        del noise_pred_uncond, noise_pred_text, noise_pred, latent_model_input, latents
-        del loss_prompt, loss_att
+        del latents
         gc.collect()
+        torch.cuda.empty_cache()
 
         # 10. Convert to PIL
         if output_type == "pil":
             new_image = self.numpy_to_pil(image.detach().cpu().numpy())
-            # print("===============done", image)
             return new_image, image
-        # print(image[0].mode)
 
         if not return_dict:
             return (image, has_nsfw_concept)

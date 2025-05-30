@@ -1,5 +1,15 @@
-<div align="center">
+<div align="left">
 
+<br>
+
+## 🌟 News  
+
+🚀 **Code updated with memory optimization!** Now you can run the code on a **24GB GPU** without issues.
+
+<br>
+</div>
+
+<div align="center">
 <h1>[CVPR 2025] Anomaly Anything: Promptable Unseen Visual Anomaly Generation</h1>
 
 <div>
