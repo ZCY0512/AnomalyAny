@@ -864,6 +864,8 @@ class RelationalAttendAndExcitePipeline(StableDiffusionPipeline):
                             del maps_curr, maps_
 
                     del noise_pred_uncond, noise_pred_text, noise_pred, latent_model_input
+                    gc.collect()
+                    torch.cuda.empty_cache()
 
                     
                     
