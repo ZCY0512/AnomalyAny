@@ -10,7 +10,7 @@
 </div>
 
 <div align="center">
-<h1>[CVPR 2025] Anomaly Anything: Promptable Unseen Visual Anomaly Generation</h1>
+<h1>[CVPR 2025] Unseen Visual Anomaly Generation</h1>
 
 <div>
     <a href='https://hansunhayden.github.io/' target='_blank'>Han Sun</a><sup>1</sup>&emsp;
@@ -33,7 +33,7 @@
 
 [//]: # (</div>)
 
-[[Project page]](https://hansunhayden.github.io/AnomalyAny.github.io/) [[Paper]](https://arxiv.org/pdf/2406.01078)[[Huggingface Demo (coming soon)]](https://arxiv.org/pdf/2406.01078)
+[[Project page]](https://hansunhayden.github.io/AnomalyAny.github.io/) [[Paper]](https://openaccess.thecvf.com/content/CVPR2025/papers/Sun_Unseen_Visual_Anomaly_Generation_CVPR_2025_paper.pdf)[[Huggingface Demo (coming soon)]](https://arxiv.org/pdf/2406.01078)
 
 
 ![generation_more.png](imgs/generation_more.png)
@@ -232,11 +232,11 @@ Big thanks to these amazing open-source works!
 If you find our work useful in your research please consider citing our paper:
 
 ```
-@article{sun2025anomalyany,
-      title={Anomaly Anything: Promptable Unseen Visual Anomaly Generation}, 
-      author={Han Sun and Yunkang Cao and Hao Dong and Olga Fink},
-      year={2024},
-      journal={arXiv preprint arXiv:2406.01078},
+@inproceedings{sun2025unseen,
+  title={Unseen Visual Anomaly Generation},
+  author={Sun, Han and Cao, Yunkang and Dong, Hao and Fink, Olga},
+  booktitle={Proceedings of the Computer Vision and Pattern Recognition Conference},
+  pages={25508--25517},
+  year={2025}
 }
-
 ```
