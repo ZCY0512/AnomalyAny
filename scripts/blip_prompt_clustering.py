@@ -10,8 +10,13 @@ import clip
 from lavis.models import load_model_and_preprocess
 
 
-def generate_captions(image_paths, device):
-    """Generate captions for images using BLIP."""
+def generate_captions(image_paths, device, base_prompts=None, base_prompt=None):
+    """Generate captions for images using BLIP.
+
+    If ``base_prompts`` or ``base_prompt`` is provided, it will be used as a
+    text prompt to condition BLIP on each image. ``base_prompts`` should map the
+    image file name to a prompt string.
+    """
     blip_model, vis_processors, _ = load_model_and_preprocess(
         name="blip_caption", model_type="base_coco", is_eval=True, device=device
     )
@@ -19,8 +24,16 @@ def generate_captions(image_paths, device):
     for path in image_paths:
         image = Image.open(path).convert("RGB")
         inp = vis_processors["eval"](image).unsqueeze(0).to(device)
+        prompt = None
+        if base_prompts is not None:
+            prompt = base_prompts.get(path.name)
+        if prompt is None:
+            prompt = base_prompt
         with torch.no_grad():
-            caption = blip_model.generate({"image": inp})[0]
+            if prompt:
+                caption = blip_model.generate({"image": inp, "prompt": prompt})[0]
+            else:
+                caption = blip_model.generate({"image": inp})[0]
         captions.append(caption)
     return captions
 
@@ -54,8 +67,16 @@ def main(args):
     image_paths = [p for p in image_dir.rglob('*') if p.suffix.lower() in {'.png', '.jpg', '.jpeg'}]
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
+    base_prompts = None
+    base_prompt = None
+    if args.prompts_json:
+        with open(args.prompts_json, 'r') as f:
+            base_prompts = json.load(f)
+    if args.base_prompt:
+        base_prompt = args.base_prompt
+
     print(f"Generating captions for {len(image_paths)} images...")
-    captions = generate_captions(image_paths, device)
+    captions = generate_captions(image_paths, device, base_prompts, base_prompt)
 
     print("Clustering prompts...")
     reps, labels = cluster_prompts(captions, args.num_clusters, device)
@@ -76,6 +97,8 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate prompts using BLIP and cluster them.")
     parser.add_argument("--image-dir", required=True, help="Directory with defect images")
+    parser.add_argument("--prompts-json", help="JSON mapping image file name to base prompt")
+    parser.add_argument("--base-prompt", help="Base prompt applied to all images if prompts-json is not provided")
     parser.add_argument("--num-clusters", type=int, default=5, help="Number of clusters")
     parser.add_argument("--output-json", default="clustered_prompts.json", help="Where to save results")
     args = parser.parse_args()
