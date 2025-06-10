@@ -248,9 +248,15 @@ Refer to the provided Jupyter notebooks for complete examples and results:
 To extract candidate prompts from defect examples automatically:
 
 ```bash
-python scripts/blip_prompt_clustering.py --image-dir ./defects --num-clusters 5
+python scripts/blip_prompt_clustering.py \
+    --image-dir ./defects \
+    --base-prompt "a photo of a hazelnut" \
+    --num-clusters 5
 ```
-This will save representative prompts to `clustered_prompts.json`.
+If you have individual base prompts per image, provide a JSON mapping file via
+`--prompts-json`. The script will condition BLIP on these base prompts to
+generate detailed captions and then cluster them. The representative prompts are
+saved to `clustered_prompts.json`.
 
 
 ## 🛠️ Todo List
