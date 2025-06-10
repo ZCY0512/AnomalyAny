@@ -214,6 +214,44 @@ Refer to the provided Jupyter notebooks for complete examples and results:
 
 ![Example Output](imgs/example.png)
 
+### Using a Custom Dataset
+
+1. Place your normal images in a folder, e.g. `./my_images/`.
+2. Set the guidance paths in the notebooks or scripts:
+   ```python
+   root_path = "./my_images/"
+   image_guidance_path = root_path + "000.png"
+   ```
+   When using `generate_custom_anomalies.py`, run with `--ok-dir ./my_images`.
+3. Craft an anomaly description and select token indices:
+   ```python
+   token_indices = get_indices_to_alter_new(stable, prompt, tokens)
+   ```
+4. Generate the anomaly image:
+   ```python
+   image, _ = run_and_display(
+       controller=controller,
+       generator=g,
+       run_standard_sd=False,
+       display_output=True,
+       prompts=[prompt],
+       indices_to_alter=token_indices,
+       init_image=image_guidance,
+       init_image_guidance_scale=0.25,
+       mask_image=None,
+       scale_factor=50,
+       normal_prompt=normal_prompt,
+       detailed_prompt=detailed_prompt,
+   )
+   ```
+
+To extract candidate prompts from defect examples automatically:
+
+```bash
+python scripts/blip_prompt_clustering.py --image-dir ./defects --num-clusters 5
+```
+This will save representative prompts to `clustered_prompts.json`.
+
 
 ## 🛠️ Todo List
 - [ ] Colab demo.
