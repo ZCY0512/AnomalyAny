@@ -259,6 +259,7 @@ generate detailed captions and then cluster them. The representative prompts are
 saved to `clustered_prompts.json`.
 
 
+
 ## 🛠️ Todo List
 - [ ] Colab demo.
 - [ ] HuggingFace demo.
